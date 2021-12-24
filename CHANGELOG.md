@@ -13,6 +13,7 @@ Please, check out guidelines: https://keepachangelog.com/en/1.0.0/
 
 ### Fixed
 
+- Fix shell completion script generated in directory containing `.tuist_version` file [#3804](https://github.com/tuist/tuist/pull/3804) by [@mikchmie](https://github.com/mikchmie)
 - Fix circular dependency lint [#3876](https://github.com/tuist/tuist/pull/3876) by [@adellibovi](https://github.com/adellibovi)
 
 ## 2.4.0 - Lune
