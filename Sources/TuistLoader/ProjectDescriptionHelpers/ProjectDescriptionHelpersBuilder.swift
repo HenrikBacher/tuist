@@ -16,7 +16,6 @@ public protocol ProjectDescriptionHelpersBuilding: AnyObject {
     ///   - path: Path to the directory that contains the manifest being loaded.
     ///   - projectDescriptionPath: Path to the project description module.
     ///   - projectDescriptionHelperPlugins: List of custom project description helper plugins to include and build.
-    @available(*, deprecated, message: "TODO: Delete me")
     func build(
         at path: AbsolutePath,
         projectDescriptionSearchPaths: ProjectDescriptionSearchPaths,
