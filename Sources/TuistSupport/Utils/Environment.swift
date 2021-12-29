@@ -68,7 +68,8 @@ public class Environment: Environmenting {
     init(directory: AbsolutePath, fileHandler: FileHandling) {
         self.directory = directory
         self.fileHandler = fileHandler
-        setup()
+        #warning("This is causing a crash because `fileHandler` logs which uses `Environment.shared`")
+        // setup()
     }
 
     // MARK: - EnvironmentControlling

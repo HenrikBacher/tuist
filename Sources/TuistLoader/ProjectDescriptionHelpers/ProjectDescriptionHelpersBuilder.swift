@@ -7,19 +7,25 @@ import TuistSupport
 /// helper files under /Tuist/ProjectDescriptionHelpers that can be imported
 /// from any manifest being loaded.
 public protocol ProjectDescriptionHelpersBuilding: AnyObject {
-    /// Builds **all** the helpers module and returns it.
+    /// Builds all the project description helpers incluing any `projectDescriptionHelperPlugins`.
+    ///
+    /// Note: Local project description helpers can import plugin helpers.
+    /// We build the plugin modules first to allow including them in the local helper modules.
     ///
     /// - Parameters:
     ///   - path: Path to the directory that contains the manifest being loaded.
     ///   - projectDescriptionPath: Path to the project description module.
     ///   - projectDescriptionHelperPlugins: List of custom project description helper plugins to include and build.
+    @available(*, deprecated, message: "TODO: Delete me")
     func build(
         at path: AbsolutePath,
         projectDescriptionSearchPaths: ProjectDescriptionSearchPaths,
         projectDescriptionHelperPlugins: [ProjectDescriptionHelpersPlugin]
     ) throws -> [ProjectDescriptionHelpersModule]
 
-    /// Builds **only** the plugin helpers module and returns it.
+    /// Builds all the plugin helpers module and returns the location to the built modules.
+    ///
+    /// Unlike local helper modules, plugins cannot include or depend on local helper modules.
     ///
     /// - Parameters:
     ///   - path: Path to the directory that contains the manifest being loaded.
@@ -38,13 +44,16 @@ public final class ProjectDescriptionHelpersBuilder: ProjectDescriptionHelpersBu
     private var builtHelpers: [AbsolutePath: ProjectDescriptionHelpersModule] = [:]
 
     /// Path to the cache directory.
-    let cacheDirectory: AbsolutePath
+    private let cacheDirectory: AbsolutePath
 
     /// Instance to locate the helpers directory.
-    let helpersDirectoryLocator: HelpersDirectoryLocating
+    private let helpersDirectoryLocator: HelpersDirectoryLocating
 
     /// Project description helpers hasher.
-    let projectDescriptionHelpersHasher: ProjectDescriptionHelpersHashing
+    private let projectDescriptionHelpersHasher: ProjectDescriptionHelpersHashing
+
+    /// Clock for measuring build duration.
+    private let clock: Clock
 
     /// The name of the default project description helpers module
     static let defaultHelpersName = "ProjectDescriptionHelpers"
@@ -57,11 +66,13 @@ public final class ProjectDescriptionHelpersBuilder: ProjectDescriptionHelpersBu
     public init(
         projectDescriptionHelpersHasher: ProjectDescriptionHelpersHashing = ProjectDescriptionHelpersHasher(),
         cacheDirectory: AbsolutePath,
-        helpersDirectoryLocator: HelpersDirectoryLocating = HelpersDirectoryLocator()
+        helpersDirectoryLocator: HelpersDirectoryLocating = HelpersDirectoryLocator(),
+        clock: Clock = WallClock()
     ) {
         self.projectDescriptionHelpersHasher = projectDescriptionHelpersHasher
         self.cacheDirectory = cacheDirectory
         self.helpersDirectoryLocator = helpersDirectoryLocator
+        self.clock = clock
     }
 
     public func build(
@@ -164,7 +175,11 @@ public final class ProjectDescriptionHelpersBuilder: ProjectDescriptionHelpersBu
             customProjectDescriptionHelperModules: customProjectDescriptionHelperModules
         )
 
+        let timer = clock.startTimer()
         try System.shared.runAndPrint(command, verbose: false, environment: Environment.shared.manifestLoadingVariables)
+        let duration = timer.stop()
+        let time = String(format: "%.3f", duration)
+        logger.notice("Building \(name) (\(time)s)", metadata: .success)
 
         return projectDescriptionHelpersModule
     }

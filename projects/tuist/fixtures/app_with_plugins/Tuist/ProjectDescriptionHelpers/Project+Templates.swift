@@ -1,3 +1,5 @@
+import ExampleTuistPlugin
+import LocalPlugin
 import ProjectDescription
 
 extension Project {
